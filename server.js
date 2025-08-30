@@ -5,7 +5,9 @@ const bcrypt = require('bcrypt');
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
-const Database = require('better-sqlite3');
+// const Database = require('better-sqlite3');
+const sqlite3 = require('sqlite3').verbose();
+
 const path = require('path');
 const fs = require('fs');
 
@@ -88,7 +90,7 @@ if (!fs.existsSync('uploads')) {
 }
 
 // 初始化数据库
-const db = new Database('audio_project.db');
+const db = new sqlite3.Database('audio_project.db');
 db.prepare(`
   CREATE TABLE IF NOT EXISTS files (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
