@@ -4,12 +4,41 @@ const multer = require('multer');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
+const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  }
+});
+const upload = multer({ storage });
+
+app.post('/api/upload', upload.single('audio'), (req, res) => {
+  res.status(200).json({ message: 'Upload successful' });
+});
+
 const app = express();
 app.use(cors());
-app.use(express.static('public'));
+// app.use(express.static('public'));
+const path = require('path');
+// 用 React 的构建产物作为静态资源目录
+app.use(express.static(path.join(__dirname, 'client/dist')));
+
+// 让所有未匹配到的请求都返回 index.html（支持 React Router）
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client/dist/index.html'));
+});
+
+app.use(express.static(path.join(__dirname, 'client/dist')));
+
 app.use('/uploads', express.static('uploads'));
 app.use(express.json());
 
@@ -54,6 +83,10 @@ function requireLogin(req, res, next) {
   next();
 }
 
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client/dist/index.html'));
+});
+
 // 注册
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
@@ -86,6 +119,11 @@ app.post('/login', async (req, res) => {
   });
 });
 
+
+app.get('/healthz', (req, res) => {
+  res.json({ ok: true });
+});
+
 // 当前登录状态
 app.get('/me', (req, res) => {
   if (!req.session.user) return res.status(401).json({ loggedIn: false });
@@ -99,21 +137,21 @@ app.get('/logout', (req, res) => {
 });
 
 // 上传文件
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
-});
-const upload = multer({ storage });
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => cb(null, 'uploads/'),
+//   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+// });
+// const upload = multer({ storage });
 
-app.post('/upload', requireLogin, upload.single('audio'), (req, res) => {
-  const { id } = req.session.user;
-  db.run('INSERT INTO files (name, path, user_id) VALUES (?, ?, ?)',
-    [req.file.originalname, req.file.path, id],
-    err => {
-      if (err) return res.status(500).json({ success: false });
-      res.json({ success: true });
-    });
-});
+// app.post('/upload', requireLogin, upload.single('audio'), (req, res) => {
+//   const { id } = req.session.user;
+//   db.run('INSERT INTO files (name, path, user_id) VALUES (?, ?, ?)',
+//     [req.file.originalname, req.file.path, id],
+//     err => {
+//       if (err) return res.status(500).json({ success: false });
+//       res.json({ success: true });
+//     });
+// });
 
 // 获取文件列表
 app.get('/files', requireLogin, (req, res) => {
@@ -150,7 +188,12 @@ app.delete('/files/:id', requireLogin, (req, res) => {
 });
 
 // 启动
+// const PORT = process.env.PORT || 3000;
+// app.listen(PORT, () => {
+//   console.log(`✅ Server running at http://localhost:${PORT}`);
+// });
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
