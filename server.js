@@ -4,7 +4,6 @@ const multer = require('multer');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
-const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
