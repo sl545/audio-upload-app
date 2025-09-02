@@ -4,11 +4,16 @@ const multer = require('multer');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 const fs = require('fs');
 
+const app = express();
+
+// 创建 uploads 文件夹
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
+// Multer 设置
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadDir);
@@ -23,10 +28,8 @@ app.post('/api/upload', upload.single('audio'), (req, res) => {
   res.status(200).json({ message: 'Upload successful' });
 });
 
-const app = express();
 app.use(cors());
-// app.use(express.static('public'));
-const path = require('path');
+// app.use(express.static('public'))
 // 用 React 的构建产物作为静态资源目录
 app.use(express.static(path.join(__dirname, 'client/dist')));
 
