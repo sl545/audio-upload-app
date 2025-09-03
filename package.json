@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -18,5 +18,8 @@
     "multer": "^2.0.2",
     "mysql2": "^3.14.3",
     "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "vite": "^7.1.4"
   }
 }
