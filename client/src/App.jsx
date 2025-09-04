@@ -107,21 +107,37 @@ function App() {
       <button onClick={handleLogout}>Logout</button>
 
       <Recorder onUploadSuccess={fetchFiles} />
-
+      {/* 手动上传功能 */}
       <h2>Uploaded Files</h2>
+      <input
+        type="file"
+        accept="audio/*"
+        onChange={async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const formData = new FormData();
+          formData.append('audio', file);
+
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            alert('Upload successful!');
+            fetchFiles(); // 刷新文件列表
+          } else {
+            alert('Upload failed.');
+          }
+        }}
+      />
+
       {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      {/* <ul>
-        {files.map(file => (
-          <li key={file.id}>
-            <button onClick={() => setSelectedFileUrl(`/uploads/${file.name}`)}>
-              {file.name}
-            </button>
-          </li>
-        ))}
-      </ul> */}
       
-      <h2>Uploaded Files</h2>
+      <h2>Files List</h2>
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <ul>
