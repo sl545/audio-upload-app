@@ -111,7 +111,7 @@ function App() {
       <h2>Uploaded Files</h2>
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      <ul>
+      {/* <ul>
         {files.map(file => (
           <li key={file.id}>
             <button onClick={() => setSelectedFileUrl(`/uploads/${file.name}`)}>
@@ -119,7 +119,49 @@ function App() {
             </button>
           </li>
         ))}
+      </ul> */}
+      
+      <h2>Uploaded Files</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      <ul>
+        {files.map(file => (
+          <li key={file.id}>
+            <strong>{file.name}</strong> — uploaded by <em>{file.username || 'unknown'}</em>
+
+            <button
+              onClick={() => setSelectedFileUrl(`/uploads/${file.name}`)}
+              style={{ marginLeft: '10px' }}
+            >
+              ▶ Play
+            </button>
+
+            <a
+              href={`/uploads/${file.name}`}
+              download
+              style={{ marginLeft: '10px' }}
+            >
+              ⬇ Download
+            </a>
+
+            <button
+              onClick={() => {
+                fetch(`/api/files/${file.id}`, {
+                  method: 'DELETE',
+                  credentials: 'include',
+                }).then(() => {
+                  setSelectedFileUrl(null);
+                  fetchFiles();
+                });
+              }}
+              style={{ marginLeft: '10px', color: 'red' }}
+            >
+              ❌ Delete
+            </button>
+          </li>
+        ))}
       </ul>
+
 
       {selectedFileUrl && (
         <div>

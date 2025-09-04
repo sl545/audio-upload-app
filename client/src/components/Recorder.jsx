@@ -32,7 +32,8 @@ export default function Recorder({ onUploadSuccess }) {
         try {
           const res = await fetch('/api/upload', {
             method: 'POST',
-            body: formData
+            body: formData,
+            credentials: 'include'
           });
 
           if (res.ok) {

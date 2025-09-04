@@ -1,32 +1,53 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 
-export default function Waveform({ audioUrl }) {
+function Waveform({ audioUrl }) {
   const containerRef = useRef(null);
-  const waveSurferRef = useRef(null);
+  const wavesurferRef = useRef(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!audioUrl) return;
-
-    // 清除之前的实例
-    if (waveSurferRef.current) {
-      waveSurferRef.current.destroy();
+    if (wavesurferRef.current) {
+      wavesurferRef.current.destroy();
     }
 
-    // 创建新实例
-    waveSurferRef.current = WaveSurfer.create({
+    const ws = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: '#aaa',
-      progressColor: '#555',
+      waveColor: '#ddd',
+      progressColor: '#3b82f6',
       height: 80,
+      responsive: true,
     });
 
-    waveSurferRef.current.load(audioUrl);
+    wavesurferRef.current = ws;
 
-    return () => {
-      waveSurferRef.current.destroy();
-    };
+    ws.load(audioUrl);
+
+    ws.on('error', (e) => {
+      console.error('WaveSurfer error:', e);
+      setError('Failed to load waveform.');
+    });
+
+    ws.on('ready', () => {
+      setError(null);
+    });
+
+    return () => ws.destroy();
   }, [audioUrl]);
 
-  return <div ref={containerRef} />;
+  const togglePlay = () => {
+    if (wavesurferRef.current) {
+      wavesurferRef.current.playPause();
+    }
+  };
+
+  return (
+    <div>
+      <div ref={containerRef} />
+      <button onClick={togglePlay} style={{ marginTop: '10px' }}>▶ Play / Pause</button>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+    </div>
+  );
 }
+
+export default Waveform;
