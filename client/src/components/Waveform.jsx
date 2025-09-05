@@ -1,53 +1,84 @@
 import React, { useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
+import FeatureExtractor from './FeatureExtractor';
 
 function Waveform({ audioUrl }) {
-  const containerRef = useRef(null);
+  const waveformRef = useRef(null);
   const wavesurferRef = useRef(null);
-  const [error, setError] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioElement, setAudioElement] = useState(null); // 提供给 FeatureExtractor
+  const isWebm = audioUrl.endsWith('.webm'); // 👈 判断格式
 
   useEffect(() => {
-    if (wavesurferRef.current) {
-      wavesurferRef.current.destroy();
+    // if (wavesurferRef.current) {
+    //   wavesurferRef.current.destroy();
+    // }
+    if (isWebm) {
+      const audio = new Audio(audioUrl);
+      setAudioElement(audio);
+      return;
     }
 
-    const ws = WaveSurfer.create({
-      container: containerRef.current,
-      waveColor: '#ddd',
-      progressColor: '#3b82f6',
-      height: 80,
-      responsive: true,
+    // 创建一个隐藏的原生 audio 元素
+    const audio = new Audio(audioUrl);
+    setAudioElement(audio); // 给特征提取器使用
+
+    // 初始化 WaveSurfer
+    wavesurferRef.current = WaveSurfer.create({
+      container: waveformRef.current,
+      waveColor: '#ccc',
+      progressColor: '#333',
+      backend: 'MediaElement',
+      media: audio,
     });
 
-    wavesurferRef.current = ws;
+    // 加载音频
+    wavesurferRef.current.load(audio);
 
-    ws.load(audioUrl);
-
-    ws.on('error', (e) => {
-      console.error('WaveSurfer error:', e);
-      setError('Failed to load waveform.');
-    });
-
-    ws.on('ready', () => {
-      setError(null);
-    });
-
-    return () => ws.destroy();
+    return () => {
+      // wavesurferRef.current.destroy();
+      if (isWebm) {
+      const audio = new Audio(audioUrl);
+      setAudioElement(audio);
+      return;
+    }
+      audio.pause();
+      audio.src = '';
+    };
   }, [audioUrl]);
 
-  const togglePlay = () => {
-    if (wavesurferRef.current) {
+  const togglePlayback = () => {
+    if (isWebm) {
+      if (audioElement.paused) {
+        audioElement.play();
+        setIsPlaying(true);
+      } else {
+        audioElement.pause();
+        setIsPlaying(false);
+      }
+    } else {
       wavesurferRef.current.playPause();
+      setIsPlaying(wavesurferRef.current.isPlaying());
     }
   };
-
-  return (
+   return (
     <div>
-      <div ref={containerRef} />
-      <button onClick={togglePlay} style={{ marginTop: '10px' }}>▶ Play / Pause</button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {isWebm ? (
+        <>
+          <audio controls src={audioUrl} style={{ width: '100%' }} />
+          <p style={{ color: 'gray' }}>No waveform or analysis for .webm</p>
+        </>
+      ) : (
+        <>
+          <div ref={waveformRef} />
+          <button onClick={togglePlayback}>
+            {isPlaying ? 'Pause' : 'Play'}
+          </button>
+          {audioElement && <FeatureExtractor audioRef={audioElement} />}
+        </>
+      )}
     </div>
   );
-}
+} 
 
 export default Waveform;
